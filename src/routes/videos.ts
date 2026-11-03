@@ -12,6 +12,8 @@ export const NICHES = [
   "professional-services",
   "retail-ecommerce",
   "hospitality-lifestyle",
+  /** The homepage showreel (first active LONG video is used) */
+  "showreel",
 ] as const;
 
 export const videosRouter = Router();

@@ -81,6 +81,7 @@ renews Let's Encrypt certificates automatically. DNS (Namecheap → Advanced DNS
 ```bash
 KEY=... # grep ADMIN_API_KEY /opt/finloa/.env
 # niche: software-learning | property-home | health-wellness | professional-services | retail-ecommerce | hospitality-lifestyle
+#        | showreel (homepage hero video; use kind LONG)
 # kind: LONG (main player + list, max 4 shown) | SHORT (shorts row, max 4 shown)
 curl -X POST https://finloa.com/api/videos -H "x-admin-key: $KEY" -H "content-type: application/json" \
   -d '{"niche":"software-learning","kind":"LONG","youtube":"https://www.youtube.com/watch?v=VIDEO_ID","title":"Product demo","sortOrder":1}'
