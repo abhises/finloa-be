@@ -8,6 +8,7 @@ import { leadsRouter } from "./routes/leads";
 import { plansRouter } from "./routes/plans";
 import { postsRouter } from "./routes/posts";
 import { subscribersRouter } from "./routes/subscribers";
+import { videosRouter } from "./routes/videos";
 
 export function createApp() {
   const app = express();
@@ -30,6 +31,7 @@ export function createApp() {
   app.use("/api/leads", leadsRouter);
   app.use("/api/posts", postsRouter);
   app.use("/api/subscribers", subscribersRouter);
+  app.use("/api/videos", videosRouter);
 
   app.use(notFound);
   app.use(errorHandler);

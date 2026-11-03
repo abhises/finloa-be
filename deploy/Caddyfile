@@ -1,6 +1,11 @@
-# Serves the site on plain HTTP by IP. When you have a domain pointing at this server,
-# replace ":80" with "finloa.com, www.finloa.com" and Caddy will get HTTPS certificates automatically.
-:80 {
+{
+	# Contact for Let's Encrypt certificate notices
+	email info@finloa.com
+}
+
+# Main site. Caddy fetches and renews HTTPS certificates automatically once DNS points here,
+# and redirects http:// to https://.
+finloa.com {
 	encode zstd gzip
 
 	handle /api/* {
@@ -10,4 +15,14 @@
 	handle {
 		reverse_proxy frontend:3000
 	}
+}
+
+# www → apex
+www.finloa.com {
+	redir https://finloa.com{uri} permanent
+}
+
+# Anything else on port 80 (e.g. the raw IP) → the domain
+:80 {
+	redir https://finloa.com{uri} permanent
 }

@@ -72,6 +72,18 @@ docker compose exec db psql -U finloa finloa
 grep ADMIN_API_KEY .env          # admin key for GET /api/leads
 ```
 
-**Adding a domain:** point an A record at the server, replace `:80` in `deploy/Caddyfile` with your domain,
-add `https://yourdomain.com` to `CORS_ORIGINS` in `/opt/finloa/.env`, open port 443 in the security group,
-and push. Caddy gets HTTPS certificates automatically.
+**Domain:** the site is served at https://finloa.com (www and the raw IP redirect there). Caddy gets and
+renews Let's Encrypt certificates automatically. DNS (Namecheap → Advanced DNS) needs `A @ 13.51.72.210` and
+`A www 13.51.72.210`. Keep the MX/TXT records for Namecheap Private Email.
+
+**Portfolio videos** (the "Our work" section) are managed through the API with the admin key:
+
+```bash
+KEY=... # grep ADMIN_API_KEY /opt/finloa/.env
+# niche: software-learning | property-home | health-wellness | professional-services | retail-ecommerce | hospitality-lifestyle
+# kind: LONG (main player + list, max 4 shown) | SHORT (shorts row, max 4 shown)
+curl -X POST https://finloa.com/api/videos -H "x-admin-key: $KEY" -H "content-type: application/json" \
+  -d '{"niche":"software-learning","kind":"LONG","youtube":"https://www.youtube.com/watch?v=VIDEO_ID","title":"Product demo","sortOrder":1}'
+curl https://finloa.com/api/videos                                   # list
+curl -X DELETE https://finloa.com/api/videos/<id> -H "x-admin-key: $KEY"   # remove
+```
