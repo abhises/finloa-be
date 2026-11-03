@@ -1,0 +1,37 @@
+import cors from "cors";
+import express from "express";
+import helmet from "helmet";
+import { env } from "./lib/env";
+import { prisma } from "./lib/prisma";
+import { errorHandler, notFound } from "./middleware/error-handler";
+import { leadsRouter } from "./routes/leads";
+import { plansRouter } from "./routes/plans";
+import { postsRouter } from "./routes/posts";
+import { subscribersRouter } from "./routes/subscribers";
+
+export function createApp() {
+  const app = express();
+
+  app.set("trust proxy", 1);
+  app.use(helmet());
+  app.use(cors({ origin: env.corsOrigins }));
+  app.use(express.json({ limit: "100kb" }));
+
+  app.get("/api/health", async (_req, res) => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      res.json({ status: "ok", db: "up" });
+    } catch {
+      res.status(503).json({ status: "degraded", db: "down" });
+    }
+  });
+
+  app.use("/api/plans", plansRouter);
+  app.use("/api/leads", leadsRouter);
+  app.use("/api/posts", postsRouter);
+  app.use("/api/subscribers", subscribersRouter);
+
+  app.use(notFound);
+  app.use(errorHandler);
+  return app;
+}

@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// A monthly video-creation package shown on the pricing section.
+model Plan {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  name          String
+  tagline       String
+  priceCents    Int
+  description   String
+  ctaLabel      String
+  /// Long-form videos (3–10 min) per month
+  longVideos    Int
+  /// Shorts (up to 60 s) per month
+  shorts        Int
+  /// e.g. "Everything in Starter, plus:"
+  featuresIntro String?
+  features      String[]
+  popular       Boolean  @default(false)
+  /// Dark card variant in the design
+  highlighted   Boolean  @default(false)
+  sortOrder     Int      @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  leads Lead[]
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  WON
+  LOST
+}
+
+enum Platform {
+  YOUTUBE
+  TIKTOK
+  INSTAGRAM
+  LINKEDIN
+  FACEBOOK
+}
+
+/// A business enquiry submitted from the contact form.
+model Lead {
+  id             String     @id @default(cuid())
+  firstName      String
+  lastName       String
+  email          String
+  company        String?
+  website        String?
+  videosPerMonth String?
+  platforms      Platform[]
+  message        String?
+  status         LeadStatus @default(NEW)
+  /// Page the enquiry came from, e.g. "video-creation", "seo", "for-creators"
+  source         String     @default("video-creation")
+  planId         String?
+  plan           Plan?      @relation(fields: [planId], references: [id], onDelete: SetNull)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([email])
+  @@index([status, createdAt])
+  @@index([source])
+}
+
+/// Newsletter subscriber from the blog.
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("blog")
+  createdAt DateTime @default(now())
+}
+
+/// Blog article shown on /blog.
+model Post {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  topic       String
+  excerpt     String?
+  coverImage  String?
+  readMinutes Int
+  published   Boolean   @default(true)
+  publishedAt DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([published, publishedAt])
+  @@index([topic])
+}

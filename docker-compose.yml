@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: finloa-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: finloa
+      POSTGRES_PASSWORD: finloa
+      POSTGRES_DB: finloa
+    ports:
+      - "5435:5432"
+    volumes:
+      - finloa-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finloa -d finloa"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  finloa-pgdata:
