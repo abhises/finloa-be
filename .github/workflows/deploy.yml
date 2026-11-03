@@ -61,27 +61,35 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
-
-      - name: Copy stack files to server
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          scp -i ~/.ssh/deploy_key deploy/docker-compose.prod.yml "$SSH_USER@$SSH_HOST:$APP_DIR/docker-compose.yml"
-          scp -i ~/.ssh/deploy_key deploy/Caddyfile "$SSH_USER@$SSH_HOST:$APP_DIR/Caddyfile"
+          # Strip stray spaces/newlines that sneak in when pasting secrets
+          HOST="$(printf '%s' "$SSH_HOST" | tr -d '[:space:]')"
+          USER_NAME="$(printf '%s' "$SSH_USER" | tr -d '[:space:]')"
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+          {
+            echo "Host deploy"
+            echo "  HostName $HOST"
+            echo "  User $USER_NAME"
+            echo "  IdentityFile ~/.ssh/deploy_key"
+            echo "  IdentitiesOnly yes"
+            echo "  ConnectTimeout 20"
+          } > ~/.ssh/config
+          ssh deploy true && echo "SSH connection OK"
+
+      - name: Copy stack files to server
+        run: |
+          scp deploy/docker-compose.prod.yml "deploy:$APP_DIR/docker-compose.yml"
+          scp deploy/Caddyfile "deploy:$APP_DIR/Caddyfile"
 
       - name: Deploy on server
         env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
+          ssh deploy \
             "APP_DIR='$APP_DIR' ACTOR='${{ github.actor }}' TOKEN='$GHCR_TOKEN' bash -s" <<'REMOTE'
           set -euo pipefail
           cd "$APP_DIR"
