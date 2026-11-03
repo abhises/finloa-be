@@ -1,0 +1,13 @@
+# Serves the site on plain HTTP by IP. When you have a domain pointing at this server,
+# replace ":80" with "finloa.com, www.finloa.com" and Caddy will get HTTPS certificates automatically.
+:80 {
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy backend:4000
+	}
+
+	handle {
+		reverse_proxy frontend:3000
+	}
+}

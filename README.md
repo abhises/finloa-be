@@ -30,3 +30,48 @@ npm run dev                 # http://localhost:4000
 ## Scripts
 
 `db:studio` opens Prisma Studio, `db:down` stops Postgres, `build` / `start` for production.
+
+## Deployment (AWS EC2 · GitHub Actions)
+
+Pushing to `main` runs `.github/workflows/deploy.yml`:
+
+1. Type-checks the code.
+2. Builds the Docker image and pushes it to `ghcr.io/abhises/finloa-be` (`latest` + commit SHA).
+3. Copies `deploy/docker-compose.prod.yml` and `deploy/Caddyfile` to `/opt/finloa` on the server.
+4. SSHes in, pulls the image and restarts `db`, `backend` and `caddy`. On start the container runs
+   `prisma migrate deploy`, upserts seed data, then starts the API, and the job waits for `/api/health`.
+
+The `finloa-fe` repo has the same workflow for the frontend image.
+
+**Server layout** (`ubuntu@13.51.72.210`):
+
+```
+/opt/finloa/
+  .env                 # secrets: POSTGRES_*, ADMIN_API_KEY, CORS_ORIGINS (only on the server)
+  docker-compose.yml   # copied from deploy/docker-compose.prod.yml on every backend deploy
+  Caddyfile            # copied from deploy/Caddyfile
+```
+
+Caddy listens on port 80 and routes `/api/*` → backend:4000 and everything else → frontend:3000.
+
+**GitHub secrets** needed in *both* repos (Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+|---|---|
+| `SSH_HOST` | `13.51.72.210` |
+| `SSH_USER` | `ubuntu` |
+| `SSH_PRIVATE_KEY` | private key whose public half is in the server's `~/.ssh/authorized_keys` |
+
+**Useful commands on the server**
+
+```bash
+cd /opt/finloa
+docker compose ps
+docker compose logs -f backend
+docker compose exec db psql -U finloa finloa
+grep ADMIN_API_KEY .env          # admin key for GET /api/leads
+```
+
+**Adding a domain:** point an A record at the server, replace `:80` in `deploy/Caddyfile` with your domain,
+add `https://yourdomain.com` to `CORS_ORIGINS` in `/opt/finloa/.env`, open port 443 in the security group,
+and push. Caddy gets HTTPS certificates automatically.

@@ -15,7 +15,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "start:prod": "prisma migrate deploy && node dist/prisma/seed.js && node dist/src/server.js"
   },
   "license": "ISC",
   "dependencies": {
@@ -26,6 +27,7 @@
     "express": "^5.3.0",
     "helmet": "^8.3.0",
     "pg": "^8.23.1",
+    "prisma": "^7.10.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -33,7 +35,6 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
-    "prisma": "^7.10.1",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3"
   },

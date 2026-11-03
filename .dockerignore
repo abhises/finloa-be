@@ -1,0 +1,14 @@
+node_modules
+dist
+generated
+.env
+.env.*
+!.env.example
+.git
+.github
+.claude
+.agents
+.windsurf
+deploy
+docker-compose.yml
+README.md
