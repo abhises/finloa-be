@@ -88,6 +88,63 @@ const posts: { slug: string; topic: string; title: string; readMinutes: number }
   { slug: "adding-a-membership-to-your-business", topic: "Businesses", title: "Adding a membership or subscription to a profitable business", readMinutes: 8 },
 ];
 
+/** Homepage showreel (top of finloa.com) */
+const SHOWREEL_YOUTUBE_ID = "wcGq9GSD1AE";
+
+const samsungIntro = {
+  slug: "samsung-business-intro",
+  topic: "Company Intro",
+  title: "Samsung Business Intro: devices, displays and security for companies.",
+  excerpt: "A short introduction to Samsung Business: who they are, what they offer companies and who it is built for.",
+  readMinutes: 4,
+  videoLength: "2:48",
+  tags: ["Company intro", "Samsung", "Technology"],
+  authorName: "Maya Collins",
+  authorRole: "Head of Growth at Finloa",
+  authorBio: "Maya writes company intros and leads strategy for business accounts at Finloa.",
+  faqs: [
+    {
+      q: "What is Samsung Business?",
+      a: "Samsung Business is Samsung's offer for companies: mobile devices, displays, security and services built for work.",
+    },
+    {
+      q: "Who is Samsung Business for?",
+      a: "Small businesses, enterprises and public sector teams that need devices and displays they can deploy and manage at scale.",
+    },
+    {
+      q: "What is Samsung Knox?",
+      a: "Knox is Samsung's security platform built into its devices, with tools to deploy, manage and protect a company fleet.",
+    },
+  ],
+  body: `Samsung Business is the part of Samsung that serves companies. It brings Samsung's phones, tablets, displays and security tools together in one offer built for work.
+
+## Who they are
+
+Samsung Electronics was founded in 1969 and is headquartered in Suwon, South Korea. Its business division helps organisations of every size choose, deploy and manage Samsung technology. Visit [Samsung Business](https://www.samsung.com/business/) for the full range.
+
+## What they offer
+
+### Mobile devices
+
+Galaxy phones, tablets and wearables set up for business use.
+
+### Displays
+
+Monitors, digital signage and interactive displays for offices and stores.
+
+### Knox security
+
+Security built into the device, with tools to deploy and manage a fleet.
+
+### Services and support
+
+Enterprise editions, extended warranties and partner programs.
+
+## Who it's for
+
+Small businesses, enterprises and public sector teams that need devices and displays they can roll out and manage at scale. Want help presenting your own company like this? See our [video creation](/videos) and [SEO](/seo) services.`,
+};
+
 async function main() {
   for (const plan of plans) {
     await prisma.plan.upsert({ where: { slug: plan.slug }, update: plan, create: plan });
@@ -98,9 +155,20 @@ async function main() {
   const now = Date.now();
   for (const [i, post] of posts.entries()) {
     const data = { ...post, publishedAt: new Date(now - i * 86_400_000) };
-    await prisma.post.upsert({ where: { slug: post.slug }, update: data, create: data });
+    // Create-only: edits made in the admin dashboard survive restarts and deploys
+    await prisma.post.upsert({ where: { slug: post.slug }, update: {}, create: data });
   }
-  console.log(`Seeded ${posts.length} posts`);
+  await prisma.post.upsert({ where: { slug: samsungIntro.slug }, update: {}, create: samsungIntro });
+  console.log(`Seeded ${posts.length + 1} posts`);
+
+  // Only seeds the showreel once; after that it's managed in the admin dashboard
+  const hasShowreel = await prisma.video.count({ where: { niche: "showreel" } });
+  if (!hasShowreel) {
+    await prisma.video.create({
+      data: { niche: "showreel", kind: "LONG", youtubeId: SHOWREEL_YOUTUBE_ID, title: "Finloa showreel" },
+    });
+    console.log("Seeded homepage showreel");
+  }
 }
 
 main()

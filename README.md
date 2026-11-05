@@ -21,11 +21,26 @@ npm run dev                 # http://localhost:4000
 | GET | `/api/plans` | — | Active video plans |
 | GET | `/api/plans/:slug` | — | One plan |
 | POST | `/api/leads` | — | Contact form submission from any page; `source` = page slug (rate-limited, honeypot) |
-| GET | `/api/leads?status=NEW&source=seo&page=1&pageSize=20` | `x-admin-key` | List leads |
-| PATCH | `/api/leads/:id` | `x-admin-key` | Update lead `status` |
+| GET | `/api/leads?status=NEW&source=seo&page=1&pageSize=20` | admin | List leads |
+| PATCH | `/api/leads/:id` | admin | Update lead `status` |
+| POST | `/api/auth/login` | — | Admin dashboard sign-in (`ADMIN_EMAIL` / `ADMIN_PASSWORD`), returns a 7-day session token |
+| GET | `/api/stats` | admin | Dashboard counts and recent activity |
 | GET | `/api/posts?topic=SEO` | — | Published blog posts |
+| GET | `/api/posts/:slug` | — | One published post (body, YouTube video, FAQ, author) |
+| GET | `/api/posts/admin/all`, `/api/posts/admin/:id` | admin | All posts incl. drafts / one post for editing |
+| POST / PATCH / DELETE | `/api/posts`, `/api/posts/:id` | admin | Create, edit, delete posts (`youtube` accepts any YouTube URL) |
+| GET | `/api/videos` | — | Active portfolio + showreel videos |
+| GET | `/api/videos/all` | admin | All videos incl. hidden |
 | POST | `/api/subscribers` | — | Blog newsletter signup (idempotent, rate-limited) |
-| GET | `/api/subscribers` | `x-admin-key` | List subscribers |
+| GET | `/api/subscribers` | admin | List subscribers |
+
+"admin" = the `x-admin-key` header, or `Authorization: Bearer <token>` from `/api/auth/login`.
+
+## Admin dashboard
+
+The website has an admin at **/admin** (finloa-fe) for blog posts, YouTube videos, leads and subscribers.
+Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env` (locally) and in `/opt/finloa/.env` on the server; sign-in is
+disabled until both are set. Seed data is create-only, so edits made in the admin survive restarts and deploys.
 
 ## Scripts
 

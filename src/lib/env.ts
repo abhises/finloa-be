@@ -7,6 +7,11 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   CORS_ORIGINS: z.string().default("http://localhost:3000"),
   ADMIN_API_KEY: z.string().min(16, "ADMIN_API_KEY must be at least 16 characters"),
+  /** Login for the /admin dashboard. Sign-in is disabled until both are set. */
+  ADMIN_EMAIL: z.string().trim().optional(),
+  ADMIN_PASSWORD: z.string().min(8, "ADMIN_PASSWORD must be at least 8 characters").optional(),
+  /** Signs admin session tokens. Defaults to a key derived from ADMIN_API_KEY. */
+  AUTH_SECRET: z.string().min(16).optional(),
 });
 
 const parsed = schema.safeParse(process.env);

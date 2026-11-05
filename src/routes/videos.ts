@@ -37,12 +37,21 @@ videosRouter.get("/", async (_req, res) => {
   res.json({ data: videos });
 });
 
+videosRouter.get("/all", requireAdmin, async (_req, res) => {
+  const videos = await prisma.video.findMany({
+    orderBy: [{ niche: "asc" }, { kind: "asc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
+    select: { ...publicSelect, active: true, createdAt: true },
+  });
+  res.json({ data: videos });
+});
+
 const createSchema = z.object({
   niche: z.enum(NICHES),
   kind: z.enum(VideoKind),
   youtube: z.string().trim().min(1, "YouTube URL or ID is required").max(300),
   title: z.string().trim().max(160).optional(),
   sortOrder: z.coerce.number().int().min(0).max(1000).default(0),
+  active: z.boolean().default(true),
 });
 
 videosRouter.post("/", requireAdmin, async (req, res) => {
@@ -53,7 +62,7 @@ videosRouter.post("/", requireAdmin, async (req, res) => {
   res.status(201).json({ data: video });
 });
 
-const updateSchema = createSchema.partial().extend({ active: z.boolean().optional() });
+const updateSchema = createSchema.partial();
 
 videosRouter.patch("/:id", requireAdmin, async (req, res) => {
   const { youtube, ...input } = updateSchema.parse(req.body);
