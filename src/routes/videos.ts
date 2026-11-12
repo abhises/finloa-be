@@ -65,7 +65,11 @@ videosRouter.post("/", requireAdmin, async (req, res) => {
 const updateSchema = createSchema.partial();
 
 videosRouter.patch("/:id", requireAdmin, async (req, res) => {
-  const { youtube, ...input } = updateSchema.parse(req.body);
+  // Zod fills in defaults (sortOrder 0, active true) for missing keys even in .partial(); keep only what was sent
+  const body = (req.body && typeof req.body === "object" ? req.body : {}) as Record<string, unknown>;
+  const { youtube, ...input } = Object.fromEntries(
+    Object.entries(updateSchema.parse(body)).filter(([k]) => k in body),
+  ) as z.infer<typeof updateSchema>;
   const id = String(req.params.id);
   const exists = await prisma.video.findUnique({ where: { id }, select: { id: true } });
   if (!exists) throw new HttpError(404, "Video not found");

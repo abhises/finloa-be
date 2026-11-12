@@ -88,6 +88,19 @@ const posts: { slug: string; topic: string; title: string; readMinutes: number }
   { slug: "adding-a-membership-to-your-business", topic: "Businesses", title: "Adding a membership or subscription to a profitable business", readMinutes: 8 },
 ];
 
+/** Dutch category names for a fresh database */
+const CATEGORY_NL: Record<string, string> = {
+  "AI Marketing": "AI-marketing",
+  SEO: "SEO",
+  Creators: "Creators",
+  Video: "Video",
+  "Content Marketing": "Contentmarketing",
+  "Website Design": "Websiteontwerp",
+  "Paid Media": "Betaalde media",
+  Businesses: "Bedrijven",
+  "Company Intro": "Bedrijfsintroductie",
+};
+
 /** Homepage showreel (top of finloa.com) */
 const SHOWREEL_YOUTUBE_ID = "wcGq9GSD1AE";
 
@@ -99,9 +112,6 @@ const samsungIntro = {
   readMinutes: 4,
   videoLength: "2:48",
   tags: ["Company intro", "Samsung", "Technology"],
-  authorName: "Maya Collins",
-  authorRole: "Head of Growth at Finloa",
-  authorBio: "Maya writes company intros and leads strategy for business accounts at Finloa.",
   faqs: [
     {
       q: "What is Samsung Business?",
@@ -151,14 +161,38 @@ async function main() {
   }
   console.log(`Seeded ${plans.length} plans`);
 
+  // Categories and authors are create-only too: edits in the admin dashboard win
+  const categoryId = async (name: string) => {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const c = await prisma.category.upsert({ where: { slug }, update: {}, create: { slug, name, nameNl: CATEGORY_NL[name] ?? "" } });
+    return c.id;
+  };
+  const maya = await prisma.author.upsert({
+    where: { slug: "maya-collins" },
+    update: {},
+    create: {
+      slug: "maya-collins",
+      name: "Maya Collins",
+      role: "Head of Growth at Finloa",
+      roleNl: "Head of Growth bij Finloa",
+      bio: "Maya writes company intros and leads strategy for business accounts at Finloa.",
+      bioNl: "Maya schrijft bedrijfsintroducties en leidt de strategie voor zakelijke klanten bij Finloa.",
+    },
+  });
+
   // Newest first in the list above, so stagger publish dates backwards by day
   const now = Date.now();
-  for (const [i, post] of posts.entries()) {
-    const data = { ...post, publishedAt: new Date(now - i * 86_400_000) };
+  for (const [i, { topic, ...post }] of posts.entries()) {
+    const data = { ...post, categoryId: await categoryId(topic), publishedAt: new Date(now - i * 86_400_000) };
     // Create-only: edits made in the admin dashboard survive restarts and deploys
     await prisma.post.upsert({ where: { slug: post.slug }, update: {}, create: data });
   }
-  await prisma.post.upsert({ where: { slug: samsungIntro.slug }, update: {}, create: samsungIntro });
+  const { topic, ...intro } = samsungIntro;
+  await prisma.post.upsert({
+    where: { slug: intro.slug },
+    update: {},
+    create: { ...intro, categoryId: await categoryId(topic), authorId: maya.id },
+  });
   console.log(`Seeded ${posts.length + 1} posts`);
 
   // Only seeds the showreel once; after that it's managed in the admin dashboard
