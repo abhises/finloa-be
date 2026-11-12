@@ -126,9 +126,17 @@ model Post {
   excerptNl        String?
   coverImage       String?
   readMinutes      Int
-  /// Article body in Markdown (## headings, lists, links, > quotes)
+  /// Article body in Markdown (## headings, lists, links, > quotes). Older posts; `html` wins when it is set.
   body             String    @default("")
   bodyNl           String    @default("")
+  /// Article body as HTML: generated from `sections` when they are set, otherwise written by hand
+  html             String    @default("")
+  htmlNl           String    @default("")
+  /// Section-based content per language ({ layout, items }); null = the HTML is edited by hand
+  sections         Json?
+  sectionsNl       Json?
+  /// Custom CSS for this post (both languages)
+  css              String    @default("")
   /// YouTube video shown at the top of the article
   youtubeId        String?
   /// e.g. "2:48"
@@ -205,4 +213,25 @@ model Video {
   updatedAt DateTime  @updatedAt
 
   @@index([niche, kind, active, sortOrder])
+}
+
+/// Building block for post content. Built-in types are synced from src/lib/sections/builtins.ts and locked.
+model SectionType {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  group       String   @default("Other")
+  description String   @default("")
+  /// [{ key, label, type, required?, help?, options?, fields? }]
+  fields      Json     @default("[]")
+  /// HTML with {{placeholders}}, {{#list}}…{{/list}} and {{^empty}}…{{/empty}}
+  template    String   @default("")
+  /// CSS for custom types; scoped to the section automatically. Built-in types use globals.css.
+  css         String   @default("")
+  /// Sample field values for previews
+  sample      Json     @default("{}")
+  builtIn     Boolean  @default(false)
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

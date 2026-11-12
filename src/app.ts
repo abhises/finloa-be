@@ -10,6 +10,7 @@ import { leadsRouter } from "./routes/leads";
 import { mediaRouter } from "./routes/media";
 import { plansRouter } from "./routes/plans";
 import { postsRouter } from "./routes/posts";
+import { sectionTypesRouter } from "./routes/section-types";
 import { statsRouter } from "./routes/stats";
 import { subscribersRouter } from "./routes/subscribers";
 import { authorsRouter, categoriesRouter } from "./routes/taxonomy";
@@ -49,6 +50,7 @@ export function createApp() {
   app.use("/api/plans", plansRouter);
   app.use("/api/leads", leadsRouter);
   app.use("/api/posts", postsRouter);
+  app.use("/api/section-types", sectionTypesRouter);
   app.use("/api/subscribers", subscribersRouter);
   app.use("/api/videos", videosRouter);
   app.use("/api/categories", categoriesRouter);
