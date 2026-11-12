@@ -3,9 +3,10 @@
 	email info@finloa.com
 }
 
-# Main site. Caddy fetches and renews HTTPS certificates automatically once DNS points here,
+# Main site (English) and the Dutch site on nl. — same frontend, which picks the language from the host.
+# Caddy fetches and renews HTTPS certificates automatically once DNS points here,
 # and redirects http:// to https://.
-finloa.com {
+finloa.com, nl.finloa.com {
 	encode zstd gzip
 
 	handle /api/* {
