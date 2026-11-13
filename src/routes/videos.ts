@@ -14,6 +14,8 @@ export const NICHES = [
   "hospitality-lifestyle",
   /** The homepage showreel (first active LONG video is used) */
   "showreel",
+  /** Homepage "Video creation" section: first LONG fills the wide frame, first two SHORTs fill the phones */
+  "home-video",
 ] as const;
 
 export const videosRouter = Router();
